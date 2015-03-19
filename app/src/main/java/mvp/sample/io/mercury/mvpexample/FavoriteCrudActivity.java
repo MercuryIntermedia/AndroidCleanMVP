@@ -31,6 +31,8 @@ public class FavoriteCrudActivity extends ActionBarActivity implements FavoriteC
     private FavoritesGetter favoritesGetter = Container.getInstance().getFavoritesGetter();
     private FavoriteRemover favoritesRemover = Container.getInstance().getFavoritesRemover();
 
+    private FavoriteCrudPresenter presenter;
+
     private ArrayAdapter<Favorite> listAdapter;
     private View add1Btn;
     private View add2Btn;
@@ -46,15 +48,12 @@ public class FavoriteCrudActivity extends ActionBarActivity implements FavoriteC
         FragmentManager fm = getSupportFragmentManager();
         PresenterHolderFragment phf = (PresenterHolderFragment) fm.findFragmentByTag(FRAG_TAG_PRESENTER_HOLDER);
 
-        final FavoriteCrudPresenter presenter;
         if (phf == null) {
             presenter = new FavoriteCrudPresenter(favoriteAdder, favoritesGetter, favoritesRemover);
             fm.beginTransaction().add(new PresenterHolderFragment(presenter), FRAG_TAG_PRESENTER_HOLDER).commit();
         } else {
             presenter = phf.presenter;
         }
-        presenter.setView(this);
-
 
         final FavoriteCrudItem.OnRemoveClickListener removeClickListener = new FavoriteCrudItem.OnRemoveClickListener() {
             @Override
@@ -107,7 +106,14 @@ public class FavoriteCrudActivity extends ActionBarActivity implements FavoriteC
 
         loading = findViewById(R.id.loading);
 
-        presenter.present();
+        presenter.attachView(this);
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        presenter.detachView();
     }
 
     @Override

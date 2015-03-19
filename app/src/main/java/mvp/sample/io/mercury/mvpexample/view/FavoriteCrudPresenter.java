@@ -11,11 +11,13 @@ import mvp.sample.io.mercury.mvpexample.interactor.FavoritesGetter;
 
 public class FavoriteCrudPresenter {
 
+    private final static NullFavoriteCrudView NULL_VIEW = new NullFavoriteCrudView();
+
     private final FavoriteAdder adder;
     private final FavoritesGetter getter;
     private final FavoriteRemover remover;
 
-    private FavoriteCrudView view;
+    private FavoriteCrudView view = NULL_VIEW;
     private State presenterState = State.WAITING;
 
     public FavoriteCrudPresenter(FavoriteAdder adder, FavoritesGetter getter, FavoriteRemover remover) {
@@ -24,10 +26,50 @@ public class FavoriteCrudPresenter {
         this.remover = remover;
     }
 
-    public void setView(FavoriteCrudView view) {
-        this.view = view;
+    /**
+     * Attaches a view to this presenter and initializes the view based on the state of the presenter
+     * @param v - The View (The 'V' of "MVP", not necessarily an Android View) that gets the presentation
+     */
+    public void attachView(FavoriteCrudView v) {
+        this.view = v;
+
+        final Handler handler = new Handler();
+        switch (presenterState) {
+            case WAITING:
+                new Thread() {
+                    @Override
+                    public void run() {
+                        final Collection<Favorite> favorites = getter.execute();
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                view.hideLoading();
+                                view.enableAddControls();
+                                view.loadFavorites(favorites);
+                                presenterState = FavoriteCrudPresenter.State.WAITING;
+
+                            }
+                        });
+                    }
+                }.start();
+                // Fall through
+            case LOADING:
+            case ADDING:
+            case REMOVING:
+                view.showLoading();
+                view.disableAddControls();
+                break;
+        }
     }
 
+    public void detachView() {
+        view = NULL_VIEW;
+    }
+
+    /**
+     * Add a favorite to the collection and modify the presentation accordingly as that happens
+     * @param favorite - What favorite gets added
+     */
     public void addFavorite(final Favorite favorite) {
         view.disableAddControls();
         view.showLoading();
@@ -70,6 +112,10 @@ public class FavoriteCrudPresenter {
         }.start();
     }
 
+    /**
+     * Remove a favorite from the collection and modify the presentation accordingly as that happens
+     * @param favorite - What favorite gets removed
+     */
     public void removeFavorite(final Favorite favorite) {
         presenterState = State.REMOVING;
         view.showLoading();
@@ -96,37 +142,6 @@ public class FavoriteCrudPresenter {
         }.start();
     }
 
-    public void present() {
-        final Handler handler = new Handler();
-
-        switch (presenterState) {
-            case WAITING:
-                new Thread() {
-                    @Override
-                    public void run() {
-                        final Collection<Favorite> favorites = getter.execute();
-                        handler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                view.hideLoading();
-                                view.enableAddControls();
-                                view.loadFavorites(favorites);
-                                presenterState = FavoriteCrudPresenter.State.WAITING;
-
-                            }
-                        });
-                    }
-                }.start();
-                // Fall through
-            case LOADING:
-            case ADDING:
-            case REMOVING:
-                view.showLoading();
-                view.disableAddControls();
-                break;
-        }
-    }
-
     private enum State { WAITING, ADDING, REMOVING, LOADING }
 
     public interface FavoriteCrudView {
@@ -145,5 +160,32 @@ public class FavoriteCrudPresenter {
         void showLoading();
 
         void hideLoading();
+    }
+
+    public static class NullFavoriteCrudView implements FavoriteCrudView {
+
+        @Override
+        public void loadFavorites(Collection<Favorite> favorites) {}
+
+        @Override
+        public void notifyAddSuccessful(Favorite favorite) {}
+
+        @Override
+        public void notifyRemoveSuccessful(Favorite favorite) {}
+
+        @Override
+        public void notifyFavoriteAlreadyExists(Favorite favorite) {}
+
+        @Override
+        public void disableAddControls() {}
+
+        @Override
+        public void enableAddControls() {}
+
+        @Override
+        public void showLoading() {}
+
+        @Override
+        public void hideLoading() {}
     }
 }
