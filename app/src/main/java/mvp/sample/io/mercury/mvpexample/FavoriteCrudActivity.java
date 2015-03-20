@@ -21,6 +21,8 @@ import mvp.sample.io.mercury.mvpexample.interactor.FavoriteRemover;
 import mvp.sample.io.mercury.mvpexample.interactor.FavoritesGetter;
 import mvp.sample.io.mercury.mvpexample.view.FavoriteCrudItem;
 import mvp.sample.io.mercury.mvpexample.view.FavoriteCrudPresenter;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 
 public class FavoriteCrudActivity extends ActionBarActivity implements FavoriteCrudPresenter.FavoriteCrudView {
@@ -49,7 +51,7 @@ public class FavoriteCrudActivity extends ActionBarActivity implements FavoriteC
         PresenterHolderFragment phf = (PresenterHolderFragment) fm.findFragmentByTag(FRAG_TAG_PRESENTER_HOLDER);
 
         if (phf == null) {
-            presenter = new FavoriteCrudPresenter(favoriteAdder, favoritesGetter, favoritesRemover);
+            presenter = new FavoriteCrudPresenter(favoriteAdder, favoritesGetter, favoritesRemover, Schedulers.io(), AndroidSchedulers.mainThread());
             fm.beginTransaction().add(new PresenterHolderFragment(presenter), FRAG_TAG_PRESENTER_HOLDER).commit();
         } else {
             presenter = phf.presenter;
