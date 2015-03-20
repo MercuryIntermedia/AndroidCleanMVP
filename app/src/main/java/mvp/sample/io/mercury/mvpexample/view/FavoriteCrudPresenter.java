@@ -55,9 +55,6 @@ public class FavoriteCrudPresenter {
     public void present() {
         switch (presenterState) {
             case WAITING:
-                view.disableAddControls();
-                view.showLoading();
-
                 Action1<FavoriteRepo.FavoritesResponse> favoritesGetterSubscriber = new Action1<FavoriteRepo.FavoritesResponse>() {
                     @Override
                     public void call(FavoriteRepo.FavoritesResponse favoriteResponse) {
@@ -91,8 +88,8 @@ public class FavoriteCrudPresenter {
                         subscriber.onCompleted();
                     }
                 }).subscribeOn(backgroundScheduler)
-                        .observeOn(foregroundScheduler)
-                        .subscribe(favoritesGetterSubscriber);
+                .observeOn(foregroundScheduler)
+                .subscribe(favoritesGetterSubscriber);
 
                 // Fall through
             case LOADING:

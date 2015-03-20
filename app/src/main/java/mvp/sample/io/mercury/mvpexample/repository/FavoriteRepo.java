@@ -24,6 +24,23 @@ public interface FavoriteRepo {
         public boolean skipCache() {
             return skipCache;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            FavoritesRequest that = (FavoritesRequest) o;
+
+            if (skipCache != that.skipCache) return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            return (skipCache ? 1 : 0);
+        }
     }
 
     public static class FavoritesResponse {

@@ -21,7 +21,7 @@ public class FavoriteAdder {
         return new Response(favorite, alreadyExisted);
     }
 
-    public class Response {
+    public static class Response {
         private final Favorite favorite;
 
         private final boolean alreadyExisted;
