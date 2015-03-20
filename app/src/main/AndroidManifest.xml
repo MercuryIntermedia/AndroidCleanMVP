@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="mvp.sample.io.mercury.mvpexample" >
+    package="io.mercury.androidcleanmvp" >
 
     <application
         android:allowBackup="true"
