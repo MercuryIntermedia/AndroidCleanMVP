@@ -143,21 +143,16 @@ public class FavoriteCrudPresenter {
                         }
                     });
                 } else {
-                    new Thread() {
+                    final Collection<Favorite> favorites = getter.execute(new FavoriteRepo.FavoritesRequest(false)).getFavorites();
+                    handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            final Collection<Favorite> favorites = getter.execute(new FavoriteRepo.FavoritesRequest(false)).getFavorites();
-                            handler.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    view.notifyAddSuccessful(favorite);
-                                    view.loadFavorites(favorites);
-                                    view.enableAddControls();
-                                    view.hideLoading();
-                                }
-                            });
+                            view.notifyAddSuccessful(favorite);
+                            view.loadFavorites(favorites);
+                            view.enableAddControls();
+                            view.hideLoading();
                         }
-                    }.start();
+                    });
                 }
             }
         }.start();
