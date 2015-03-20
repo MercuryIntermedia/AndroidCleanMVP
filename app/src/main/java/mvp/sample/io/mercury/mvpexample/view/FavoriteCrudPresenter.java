@@ -86,23 +86,6 @@ public class FavoriteCrudPresenter {
                 .observeOn(foregroundScheduler)
                 .subscribe(favoritesGetterSubscriber);
 
-//                new Thread() {
-//                    @Override
-//                    public void run() {
-//                        final Collection<Favorite> favorites = getter.execute();
-//                        handler.post(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                view.hideLoading();
-//                                view.enableAddControls();
-//                                view.loadFavorites(favorites);
-//                                presenterState = FavoriteCrudPresenter.State.WAITING;
-//
-//                            }
-//                        });
-//                    }
-//                }.start();
-
                 // Fall through
             case LOADING:
             case ADDING:
