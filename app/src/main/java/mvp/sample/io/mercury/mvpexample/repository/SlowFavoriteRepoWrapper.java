@@ -24,10 +24,10 @@ public class SlowFavoriteRepoWrapper implements FavoriteRepo {
     }
 
     @Override
-    public Collection<Favorite> get() {
+    public FavoritesResponse get(FavoritesRequest favoritesRequest) {
         try {
             Thread.sleep(delayInMillis);
-            return wrappedRepo.get();
+            return wrappedRepo.get(favoritesRequest);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }

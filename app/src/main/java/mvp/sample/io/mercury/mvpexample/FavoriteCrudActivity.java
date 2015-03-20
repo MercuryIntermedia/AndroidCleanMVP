@@ -155,14 +155,12 @@ public class FavoriteCrudActivity extends ActionBarActivity implements FavoriteC
 
     @Override
     public void showLoading() {
-        list.setVisibility(View.GONE);
         loading.setVisibility(View.VISIBLE);
     }
 
     @Override
     public void hideLoading() {
         loading.setVisibility(View.GONE);
-        list.setVisibility(View.VISIBLE);
     }
 
     @SuppressLint("ValidFragment")

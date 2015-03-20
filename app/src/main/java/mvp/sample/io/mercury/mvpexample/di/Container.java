@@ -1,10 +1,14 @@
 package mvp.sample.io.mercury.mvpexample.di;
 
+import mvp.sample.io.mercury.mvpexample.entity.Favorite;
 import mvp.sample.io.mercury.mvpexample.interactor.FavoriteAdder;
 import mvp.sample.io.mercury.mvpexample.interactor.FavoriteRemover;
 import mvp.sample.io.mercury.mvpexample.interactor.FavoritesGetter;
+import mvp.sample.io.mercury.mvpexample.repository.CachingFavoriteRepo;
+import mvp.sample.io.mercury.mvpexample.repository.FavoriteReadThroughCache;
 import mvp.sample.io.mercury.mvpexample.repository.FavoriteRepo;
 import mvp.sample.io.mercury.mvpexample.repository.InMemoryFavoriteRepo;
+import mvp.sample.io.mercury.mvpexample.repository.MockRemoteFavoriteRepo;
 import mvp.sample.io.mercury.mvpexample.repository.SlowFavoriteRepoWrapper;
 
 public class Container {
@@ -47,7 +51,9 @@ public class Container {
 
     public FavoriteRepo getFavoriteRepo() {
         if (favoriteRepo == null) {
-            favoriteRepo = new SlowFavoriteRepoWrapper(new InMemoryFavoriteRepo(), 1000);
+            CachingFavoriteRepo inMemoryRepo = new InMemoryFavoriteRepo();
+            FavoriteRepo remoteRepo = new SlowFavoriteRepoWrapper(new MockRemoteFavoriteRepo(), 1000);
+            favoriteRepo = new FavoriteReadThroughCache(inMemoryRepo, remoteRepo);
         }
         return favoriteRepo;
     }

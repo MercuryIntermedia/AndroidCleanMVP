@@ -9,11 +9,11 @@ import mvp.sample.io.mercury.mvpexample.entity.Favorite;
 import mvp.sample.io.mercury.mvpexample.interactor.FavoriteAdder;
 import mvp.sample.io.mercury.mvpexample.interactor.FavoriteRemover;
 import mvp.sample.io.mercury.mvpexample.interactor.FavoritesGetter;
+import mvp.sample.io.mercury.mvpexample.repository.FavoriteRepo;
 import rx.Observable;
 import rx.Scheduler;
 import rx.Subscriber;
 import rx.functions.Action1;
-import rx.functions.Func1;
 
 public class FavoriteCrudPresenter {
 
@@ -50,24 +50,41 @@ public class FavoriteCrudPresenter {
                 view.disableAddControls();
                 view.showLoading();
 
-                Observable.create(new Observable.OnSubscribe<Collection<Favorite>>() {
+                Action1<FavoriteRepo.FavoritesResponse> favoritesGetterSubscriber = new Action1<FavoriteRepo.FavoritesResponse>() {
                     @Override
-                    public void call(Subscriber<? super Collection<Favorite>> subscriber) {
-                        Collection<Favorite> favorites = getter.execute();
-                        subscriber.onNext(favorites);
+                    public void call(FavoriteRepo.FavoritesResponse favoriteResponse) {
+                        view.loadFavorites(favoriteResponse.getFavorites());
+                        if (!favoriteResponse.isCachedData()) {
+                            view.hideLoading();
+                            view.enableAddControls();
+                        } else {
+                            // Get the non-cached version
+                            Observable.create(new Observable.OnSubscribe<FavoriteRepo.FavoritesResponse>() {
+                                @Override
+                                public void call(Subscriber<? super FavoriteRepo.FavoritesResponse> subscriber) {
+                                    FavoriteRepo.FavoritesResponse favoritesResponse = getter.execute(new FavoriteRepo.FavoritesRequest(true)); // skip cache
+                                    subscriber.onNext(favoritesResponse);
+                                    subscriber.onCompleted();
+                                }
+                            }).subscribeOn(backgroundScheduler)
+                                    .observeOn(foregroundScheduler)
+                                    .subscribe(this);
+                        }
+
+                        presenterState = State.WAITING;
+                    }
+                };
+
+                Observable.create(new Observable.OnSubscribe<FavoriteRepo.FavoritesResponse>() {
+                    @Override
+                    public void call(Subscriber<? super FavoriteRepo.FavoritesResponse> subscriber) {
+                        FavoriteRepo.FavoritesResponse favoritesResponse = getter.execute(new FavoriteRepo.FavoritesRequest(false));
+                        subscriber.onNext(favoritesResponse);
                         subscriber.onCompleted();
                     }
                 }).subscribeOn(backgroundScheduler)
                 .observeOn(foregroundScheduler)
-                .subscribe(new Action1<Collection<Favorite>>() {
-                    @Override
-                    public void call(Collection<Favorite> favorites) {
-                        view.hideLoading();
-                        view.enableAddControls();
-                        view.loadFavorites(favorites);
-                        presenterState = FavoriteCrudPresenter.State.WAITING;
-                    }
-                });
+                .subscribe(favoritesGetterSubscriber);
 
 //                new Thread() {
 //                    @Override
@@ -85,7 +102,7 @@ public class FavoriteCrudPresenter {
 //                        });
 //                    }
 //                }.start();
-                
+
                 // Fall through
             case LOADING:
             case ADDING:
@@ -129,7 +146,7 @@ public class FavoriteCrudPresenter {
                     new Thread() {
                         @Override
                         public void run() {
-                            final Collection<Favorite> favorites = getter.execute();
+                            final Collection<Favorite> favorites = getter.execute(new FavoriteRepo.FavoritesRequest(false)).getFavorites();
                             handler.post(new Runnable() {
                                 @Override
                                 public void run() {
@@ -160,7 +177,7 @@ public class FavoriteCrudPresenter {
             @Override
             protected Collection<Favorite> doInBackground(Favorite... params) {
                 remover.execute(favorite);
-                return getter.execute();
+                return getter.execute(new FavoriteRepo.FavoritesRequest(false)).getFavorites();
             }
 
             @Override

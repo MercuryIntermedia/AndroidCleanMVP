@@ -1,8 +1,5 @@
 package mvp.sample.io.mercury.mvpexample.interactor;
 
-import java.util.Collection;
-
-import mvp.sample.io.mercury.mvpexample.entity.Favorite;
 import mvp.sample.io.mercury.mvpexample.repository.FavoriteRepo;
 
 public class FavoritesGetter {
@@ -12,7 +9,7 @@ public class FavoritesGetter {
         this.repo = repo;
     }
 
-    public Collection<Favorite> execute() {
-        return repo.get();
+    public FavoriteRepo.FavoritesResponse execute(FavoriteRepo.FavoritesRequest favoritesRequest) {
+        return repo.get(favoritesRequest);
     }
 }
