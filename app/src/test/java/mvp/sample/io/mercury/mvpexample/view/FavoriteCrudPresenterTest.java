@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.Executor;
 
+import mvp.sample.io.mercury.mvpexample.concurrent.SynchronousExecutor;
 import mvp.sample.io.mercury.mvpexample.entity.Favorite;
 import mvp.sample.io.mercury.mvpexample.interactor.FavoriteAdder;
 import mvp.sample.io.mercury.mvpexample.interactor.FavoriteRemover;
@@ -26,12 +27,7 @@ import static org.mockito.Mockito.when;
 public class FavoriteCrudPresenterTest {
 
     private Scheduler syncScheduler = Schedulers.immediate();
-    private Executor syncExecutor = new Executor() {
-        @Override
-        public void execute(Runnable command) {
-            command.run();
-        }
-    };
+    private Executor syncExecutor = new SynchronousExecutor();
 
     @Mock private FavoriteCrudPresenter.FavoriteCrudView mockView;
     @Mock private FavoritesGetter mockGetter;
@@ -157,4 +153,5 @@ public class FavoriteCrudPresenterTest {
         verify(mockView).hideLoading();
         verify(mockView).notifyRemoveSuccessful(fav1);
     }
+
 }
