@@ -2,6 +2,7 @@ package mvp.sample.io.mercury.mvpexample;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.ActionBarActivity;
@@ -13,6 +14,8 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import java.util.Collection;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import mvp.sample.io.mercury.mvpexample.di.Container;
 import mvp.sample.io.mercury.mvpexample.entity.Favorite;
@@ -51,7 +54,16 @@ public class FavoriteCrudActivity extends ActionBarActivity implements FavoriteC
         PresenterHolderFragment phf = (PresenterHolderFragment) fm.findFragmentByTag(FRAG_TAG_PRESENTER_HOLDER);
 
         if (phf == null) {
-            presenter = new FavoriteCrudPresenter(favoriteAdder, favoritesGetter, favoritesRemover, Schedulers.io(), AndroidSchedulers.mainThread());
+            Executor backgroundExecutor = Executors.newFixedThreadPool(10);
+
+            final Handler handler = new Handler();
+            Executor foregroundExecutor = new Executor() {
+                @Override
+                public void execute(Runnable command) {
+                    handler.post(command);
+                }
+            };
+            presenter = new FavoriteCrudPresenter(favoriteAdder, favoritesGetter, favoritesRemover, Schedulers.io(), AndroidSchedulers.mainThread(), backgroundExecutor, foregroundExecutor);
             fm.beginTransaction().add(new PresenterHolderFragment(presenter), FRAG_TAG_PRESENTER_HOLDER).commit();
         } else {
             presenter = phf.presenter;

@@ -1,9 +1,9 @@
 package mvp.sample.io.mercury.mvpexample.view;
 
 import android.os.AsyncTask;
-import android.os.Handler;
 
 import java.util.Collection;
+import java.util.concurrent.Executor;
 
 import mvp.sample.io.mercury.mvpexample.entity.Favorite;
 import mvp.sample.io.mercury.mvpexample.interactor.FavoriteAdder;
@@ -24,16 +24,20 @@ public class FavoriteCrudPresenter {
     private final FavoriteRemover remover;
     private final Scheduler backgroundScheduler;
     private final Scheduler foregroundScheduler;
+    private final Executor backgroundExecutor;
+    private final Executor foregroundExecutor;
 
     private FavoriteCrudView view = NULL_VIEW;
     private State presenterState = State.WAITING;
 
-    public FavoriteCrudPresenter(FavoriteAdder adder, FavoritesGetter getter, FavoriteRemover remover, Scheduler backgroundScheduler, Scheduler foregroundScheduler) {
+    public FavoriteCrudPresenter(FavoriteAdder adder, FavoritesGetter getter, FavoriteRemover remover, Scheduler backgroundScheduler, Scheduler foregroundScheduler, Executor backgroundExecutor, Executor foregroundExecutor) {
         this.adder = adder;
         this.getter = getter;
         this.remover = remover;
         this.backgroundScheduler = backgroundScheduler;
         this.foregroundScheduler = foregroundScheduler;
+        this.backgroundExecutor = backgroundExecutor;
+        this.foregroundExecutor = foregroundExecutor;
     }
 
     /**
@@ -115,14 +119,13 @@ public class FavoriteCrudPresenter {
         view.showLoading();
         view.add(favorite);
 
-        final Handler handler = new Handler();
-        new Thread() {
+        backgroundExecutor.execute(new Runnable() {
             @Override
             public void run() {
                 final FavoriteAdder.Response adderResponse = adder.execute(favorite);
                 final Collection<Favorite> favorites = getter.execute(new FavoriteRepo.FavoritesRequest(false)).getFavorites();
 
-                handler.post(new Runnable() {
+                foregroundExecutor.execute(new Runnable() {
                     @Override
                     public void run() {
 
@@ -138,6 +141,12 @@ public class FavoriteCrudPresenter {
                         presenterState = FavoriteCrudPresenter.State.WAITING;
                     }
                 });
+            }
+        });
+        new Thread() {
+            @Override
+            public void run() {
+
             }
         }.start();
     }
