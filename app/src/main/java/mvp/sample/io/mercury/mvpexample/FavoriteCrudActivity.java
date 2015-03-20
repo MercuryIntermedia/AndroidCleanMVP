@@ -109,6 +109,7 @@ public class FavoriteCrudActivity extends ActionBarActivity implements FavoriteC
         loading = findViewById(R.id.loading);
 
         presenter.attachView(this);
+        presenter.present();
 
     }
 

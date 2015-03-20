@@ -37,14 +37,18 @@ public class FavoriteCrudPresenter {
     }
 
     /**
-     * Attaches a view to this presenter and initializes the view based on the state of the presenter
+     * Attaches a view to this presenter
      *
      * @param v - The View (The 'V' of "MVP", not necessarily an Android View) that gets the presentation
      */
     public void attachView(FavoriteCrudView v) {
         this.view = v;
+    }
 
-        final Handler handler = new Handler();
+    /**
+     * Initializes the view based on the state of the presenter
+     */
+    public void present() {
         switch (presenterState) {
             case WAITING:
                 view.disableAddControls();
@@ -83,8 +87,8 @@ public class FavoriteCrudPresenter {
                         subscriber.onCompleted();
                     }
                 }).subscribeOn(backgroundScheduler)
-                .observeOn(foregroundScheduler)
-                .subscribe(favoritesGetterSubscriber);
+                        .observeOn(foregroundScheduler)
+                        .subscribe(favoritesGetterSubscriber);
 
                 // Fall through
             case LOADING:
