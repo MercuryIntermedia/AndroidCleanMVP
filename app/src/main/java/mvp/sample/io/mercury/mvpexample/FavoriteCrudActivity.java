@@ -163,6 +163,16 @@ public class FavoriteCrudActivity extends ActionBarActivity implements FavoriteC
         loading.setVisibility(View.GONE);
     }
 
+    @Override
+    public void add(Favorite favorite) {
+        listAdapter.add(favorite);
+    }
+
+    @Override
+    public void remove(Favorite favorite) {
+        listAdapter.remove(favorite);
+    }
+
     @SuppressLint("ValidFragment")
     private class PresenterHolderFragment extends Fragment {
         final FavoriteCrudPresenter presenter;

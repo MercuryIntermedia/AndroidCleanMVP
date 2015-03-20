@@ -126,34 +126,31 @@ public class FavoriteCrudPresenter {
         presenterState = FavoriteCrudPresenter.State.ADDING;
         view.disableAddControls();
         view.showLoading();
+        view.add(favorite);
 
         final Handler handler = new Handler();
         new Thread() {
             @Override
             public void run() {
-                FavoriteAdder.Response adderResponse = adder.execute(favorite);
-                if (adderResponse.alreadyExisted()) {
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
+                final FavoriteAdder.Response adderResponse = adder.execute(favorite);
+                final Collection<Favorite> favorites = getter.execute(new FavoriteRepo.FavoritesRequest(false)).getFavorites();
+
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        view.loadFavorites(favorites);
+                        view.enableAddControls();
+                        view.hideLoading();
+                        if (adderResponse.alreadyExisted()) {
                             view.notifyFavoriteAlreadyExists(favorite);
-                            view.enableAddControls();
-                            view.hideLoading();
-                            presenterState = FavoriteCrudPresenter.State.WAITING;
-                        }
-                    });
-                } else {
-                    final Collection<Favorite> favorites = getter.execute(new FavoriteRepo.FavoritesRequest(false)).getFavorites();
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
+                        } else {
                             view.notifyAddSuccessful(favorite);
-                            view.loadFavorites(favorites);
-                            view.enableAddControls();
-                            view.hideLoading();
                         }
-                    });
-                }
+
+                        presenterState = FavoriteCrudPresenter.State.WAITING;
+                    }
+                });
             }
         }.start();
     }
@@ -167,6 +164,7 @@ public class FavoriteCrudPresenter {
         presenterState = State.REMOVING;
         view.showLoading();
         view.disableAddControls();
+        view.remove(favorite);
 
         new AsyncTask<Favorite, Void, Collection<Favorite>>() {
             @Override
@@ -204,6 +202,10 @@ public class FavoriteCrudPresenter {
         void showLoading();
 
         void hideLoading();
+
+        void add(Favorite favorite);
+
+        void remove(Favorite favorite);
     }
 
     public static class NullFavoriteCrudView implements FavoriteCrudView {
@@ -238,6 +240,14 @@ public class FavoriteCrudPresenter {
 
         @Override
         public void hideLoading() {
+        }
+
+        @Override
+        public void add(Favorite favorite) {
+        }
+
+        @Override
+        public void remove(Favorite favorite) {
         }
     }
 }
