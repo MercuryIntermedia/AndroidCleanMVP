@@ -162,22 +162,24 @@ public class FavoriteCrudPresenter {
         view.disableAddControls();
         view.remove(favorite);
 
-        new AsyncTask<Favorite, Void, Collection<Favorite>>() {
+        backgroundExecutor.execute(new Runnable() {
             @Override
-            protected Collection<Favorite> doInBackground(Favorite... params) {
+            public void run() {
                 remover.execute(favorite);
-                return getter.execute(new FavoriteRepo.FavoritesRequest(false)).getFavorites();
-            }
+                final Collection<Favorite> favorites = getter.execute(new FavoriteRepo.FavoritesRequest(false)).getFavorites();
 
-            @Override
-            protected void onPostExecute(Collection<Favorite> favorites) {
-                view.notifyRemoveSuccessful(favorite);
-                view.loadFavorites(favorites);
-                view.hideLoading();
-                view.enableAddControls();
-                presenterState = FavoriteCrudPresenter.State.WAITING;
+                foregroundExecutor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        view.notifyRemoveSuccessful(favorite);
+                        view.loadFavorites(favorites);
+                        view.hideLoading();
+                        view.enableAddControls();
+                        presenterState = FavoriteCrudPresenter.State.WAITING;
+                    }
+                });
             }
-        }.execute(favorite);
+        });
     }
 
     private enum State { WAITING, ADDING, REMOVING, LOADING }
