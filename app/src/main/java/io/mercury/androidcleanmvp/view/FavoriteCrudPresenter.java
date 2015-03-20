@@ -138,12 +138,6 @@ public class FavoriteCrudPresenter {
                 });
             }
         });
-        new Thread() {
-            @Override
-            public void run() {
-
-            }
-        }.start();
     }
 
     /**
